@@ -1,0 +1,126 @@
+TEST EXECUTION RECORD - Assignment #04 (run on 2026-11-08, Python 3.12.3, Node v22.23.4, Linux sandbox)
+Output below is copied unedited from the terminal.
+
+################ A. BASELINE (initial version) ################
+$ cd initial/python_booking_rules && python3 -m unittest test_booking
+..........................
+----------------------------------------------------------------------
+Ran 26 tests in 0.001s
+
+OK
+
+$ ls initial/web_prototype/src  # TypeScript rules of the initial web prototype: any test files?
+test files found: 0
+
+################ B. FINAL VERSION ################
+$ cd final && node --test --test-reporter=spec "tests/*.test.ts"
+✔ integration: successful flow (R5, 100 people, projector, 11:00-12:30 is booked -> unavailable; 13:00-14:00 free) (1.085177ms)
+✔ integration: no result before Check is pressed (0.145128ms)
+✔ integration (AC6): validation errors are plain and kept separate from the result (0.157262ms)
+✔ integration (AC6): out of range and end-not-after-start messages (0.181964ms)
+✔ integration: invalid attendees value is reported and does not crash filtering (0.206014ms)
+✔ integration: building a view model never changes room bookings (AC5 at catalog level) (0.127178ms)
+✔ catalog: at least 4 rooms, each with id, name, capacity, equipment, blocked, bookings (0.966207ms)
+✔ F1 capacity: exact capacity matches, one more attendee does not (0.696599ms)
+✔ F2 equipment: room must contain ALL selected items (not just one) (0.131275ms)
+✔ F1+F2 combined: both filters must hold (0.151344ms)
+✔ filtering does not mutate the catalog (0.112908ms)
+✔ F3 blocked room is never reported as available (even for a free slot) (0.4566ms)
+✔ F4 empty state when no room matches, and no result is produced (0.187988ms)
+✔ F5 switching room refreshes the result using THAT room's bookings (0.277528ms)
+✔ F5 if the filter removes the selected room, the check never falls back to an unfiltered room (0.349543ms)
+✔ canBook: identical available flag AND reason for 3,456 generated inputs (13.612332ms)
+✔ validators: identical results/messages for representative text inputs (0.694215ms)
+✔ minutesToHHMM: identical for the whole valid range and 24:00 fix kept (1.106188ms)
+✔ [initial] AC4 touching intervals are NOT overlap (660-720 and 540-... edge) (0.881763ms)
+✔ [initial] AC4 overlap is rejected (partial, containing, inside, duplicate) (0.201602ms)
+✔ [initial] AC2 boundary: exactly 120 minutes allowed, 121 rejected (0.085882ms)
+✔ [initial] AC1 start must be strictly after now (start == now rejected) (0.172968ms)
+✔ [initial] AC1 day bounds: end 1440 allowed (120 min ending at midnight), 1441 and reversed/zero rejected (0.105418ms)
+✔ [initial] AC3 blocked room rejects every request (0.073053ms)
+✔ [initial] AC4 several bookings, unsorted list, gap between two (0.133862ms)
+✔ [initial] AC5 input is never mutated (0.601655ms)
+✔ [final] AC4 touching intervals are NOT overlap (660-720 and 540-... edge) (0.305823ms)
+✔ [final] AC4 overlap is rejected (partial, containing, inside, duplicate) (0.242152ms)
+✔ [final] AC2 boundary: exactly 120 minutes allowed, 121 rejected (0.096256ms)
+✔ [final] AC1 start must be strictly after now (start == now rejected) (0.05512ms)
+✔ [final] AC1 day bounds: end 1440 allowed (120 min ending at midnight), 1441 and reversed/zero rejected (0.091024ms)
+✔ [final] AC3 blocked room rejects every request (0.058298ms)
+✔ [final] AC4 several bookings, unsorted list, gap between two (0.053458ms)
+✔ [final] AC5 input is never mutated (1.753879ms)
+ℹ tests 34
+ℹ suites 0
+ℹ pass 34
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 455.589417
+
+$ cd final && node tests/demo_scenarios.ts
+S1 filter success: 25 attendees + Microphone
+   rooms shown: R3,R5; room used: R3
+   => AVAILABLE - Room is available for the requested time.
+
+S2 filter failure: 500 attendees
+   rooms shown: (none); room used: -
+   => EMPTY STATE: no rooms match
+
+S3 filter failure: Projector + Video conferencing + Whiteboard
+   rooms shown: (none); room used: -
+   => EMPTY STATE: no rooms match
+
+S4 room switching, step 1: R1, 700-760
+   rooms shown: R1,R2,R3,R4,R5; room used: R1
+   => AVAILABLE - Room is available for the requested time.
+
+S5 room switching, step 2: same request, now R3
+   rooms shown: R1,R2,R3,R4,R5; room used: R3
+   => UNAVAILABLE - Overlaps an existing booking from 720 to 780.
+
+S6 blocked room R2 with a free slot
+   rooms shown: R1,R2,R3,R4,R5; room used: R2
+   => UNAVAILABLE - This room is blocked and cannot be booked.
+
+S7 original rule AC2: 121 minutes in R1
+   rooms shown: R1,R2,R3,R4,R5; room used: R1
+   => UNAVAILABLE - Duration is 121 minutes; the maximum allowed is 120.
+
+S8 original rule AC4: touching (660-720 after booking 600-660)
+   rooms shown: R1,R2,R3,R4,R5; room used: R1
+   => AVAILABLE - Room is available for the requested time.
+
+S9 original rule AC4: overlap (630-690)
+   rooms shown: R1,R2,R3,R4,R5; room used: R1
+   => UNAVAILABLE - Overlaps an existing booking from 600 to 660.
+
+S10 original rule AC1: start == now
+   rooms shown: R1,R2,R3,R4,R5; room used: R1
+   => UNAVAILABLE - Start must be strictly after now.
+
+S11 AC6 validation: empty start, text end
+   rooms shown: R1,R2,R3,R4,R5; room used: R1
+   => no result (errors: Start is required. | End must be a whole number.)
+
+################ C. UI RENDER CHECK ################
+NOTE: run in an offline sandbox where lucide-react could not be installed, so icons were replaced by empty stubs by the script's fallback;
+      react, react-dom and esbuild were real. On a normal machine (after npm install) the real icons are used.
+$ cd final && node tests/ui_smoke.mjs
+UI smoke check passed: 5 room options, filters and form rendered, no result/empty state initially.
+exit code: 0
+
+################ D. TYPE CHECK ################
+$ tsc --noEmit --strict (src/lib/*.ts, src/data/rooms.ts; React components NOT included: @types/react unavailable offline)
+no errors (exit 0)
+
+################ E. NOT RUN IN THE SANDBOX (no internet): run on your own machine and paste results here ################
+$ npm install
+(result: ______ )
+$ npm run typecheck
+(result: ______ )
+$ npm run build
+(result: ______ )
+$ npm test
+(result: ______ )
+$ npm run test:ui
+(result: ______ )
